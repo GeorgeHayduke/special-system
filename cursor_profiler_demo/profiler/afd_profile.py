@@ -696,12 +696,17 @@ def profile_report(config: dict) -> str:
     colors = config_html(config)
 
     logging.info("Render report.")
+    # NOTE: df_stats/warnings/lbl_stats are converted to plain dict records
+    # before rendering. Jinja2's `row.itertuples()` + `row._column` pattern
+    # silently breaks: pandas namedtuples rename any field starting with
+    # an underscore (_column, _dtype, _feature) to a positional name like
+    # _1, so the template can't reach them by name and renders blank cells.
     return profile.render(
         file=config["file_name"],
         overview=overview_stats,
-        warnings=warnings,
-        df_stats=df_stats,
-        label=lbl_stats,
+        warnings=warnings.to_dict("records"),
+        df_stats=df_stats.to_dict("records"),
+        label=lbl_stats.to_dict("records"),
         label_msg=lbl_warnings,
         cat_rec=cat_rec,
         num_rec=num_rec,
