@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Data Profile — {{ file }}</title>
+  <style>
+    body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 2rem; color: #16233A; }
+    h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; border-bottom: 2px solid #0F4C75; padding-bottom: 0.25rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #E2E8F0; font-size: 0.85rem; }
+    th { background: #F0F4F8; }
+    .warn { background: #FFF4E5; border-left: 4px solid #F2A541; padding: 10px 14px; margin: 6px 0; font-size: 0.9rem; }
+    .ok { color: #2E9E5B; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Data Profile Report — {{ file }}</h1>
+
+  <h2>Overview</h2>
+  <table>
+    {% for key, value in overview.items() %}
+      {% if key not in ["overview_msg", "overview_cnt"] %}
+      <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+
+  {% if overview.overview_cnt and overview.overview_cnt > 0 %}
+    <h2>Overview warnings</h2>
+    {% for key, msg in overview.overview_msg.items() %}
+      <div class="warn"><strong>{{ key }}</strong>: {{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <h2>Label distribution</h2>
+  <table>
+    <tr><th>Label</th><th>Class</th><th>Count</th><th>Percentage</th></tr>
+    {% for row in label.itertuples() %}
+      <tr><td>{{ row.Name }}</td><td>{{ row.CLS }}</td><td>{{ row.Count }}</td><td>{{ row.Percentage }}</td></tr>
+    {% endfor %}
+  </table>
+  {% if label_msg.message %}
+    <div class="warn">{{ label_msg.message }}</div>
+  {% endif %}
+
+  <h2>Column types &amp; quality</h2>
+  <table>
+    <tr><th>Column</th><th>Feature type</th><th>Dtype</th><th>Unique</th><th>Null %</th><th>Message</th></tr>
+    {% for row in df_stats.itertuples() %}
+      <tr>
+        <td>{{ row._column }}</td>
+        <td>{{ row._feature }}</td>
+        <td>{{ row._dtype }}</td>
+        <td>{{ row.nunique }}</td>
+        <td>{{ "%.1f"|format(row.null_pct * 100) }}%</td>
+        <td>{{ row._message or "" }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  {% if warnings is not none and warnings|length > 0 %}
+    <h2>Column warnings</h2>
+    {% for row in warnings.itertuples() %}
+      <div class="warn"><strong>{{ row._column }}</strong>: {{ row._message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <h2>Feature &harr; label correlation</h2>
+  <table>
+    <tr><th>Feature</th><th>Correlation with label</th></tr>
+    {% for feat, val in zip(corr_rec.features, corr_rec.data_label) %}
+      <tr><td>{{ feat }}</td><td>{{ "%.4f"|format(val) }}</td></tr>
+    {% endfor %}
+  </table>
+
+  <p style="margin-top:2rem;color:#5C6B7A;font-size:0.8rem;">
+    Simplified report template for the Cursor tutorial demo — the original
+    repo's dashboard (charts, per-category breakdowns) lives in
+    profile_categorical.html / profile_numeric.html / profile_correlation.html
+    upstream and isn't reproduced here.
+  </p>
+</body>
+</html>
